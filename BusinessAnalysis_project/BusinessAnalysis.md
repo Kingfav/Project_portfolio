@@ -42,10 +42,10 @@ In Q1 2022, Balaji Fast Food aimed to optimize marketing and revenue. This repor
 
 ### Dashboard Previews
 
-![Pivot Table Dashboard 1](images/project_pic_2.png)  
+![Project 1](project_1.PNG)  
 *Figure 1: Item-Wise Quantity Distribution and Sales Summary*
 
-![Pivot Table Dashboard 2](images/project_pic_1.png)  
+![Pivot Table Dashboard 2](project_2.PNG)  
 *Figure 2: Monthly Sales by Product Category and Sales by Time of Day*
 
 ---
