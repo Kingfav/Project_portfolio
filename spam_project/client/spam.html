@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detection Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result {
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .spam {
+            background: #ffe6e6;
+            border: 2px solid #ff4444;
+            color: #cc0000;
+        }
+
+        .not-spam {
+            background: #e6ffe6;
+            border: 2px solid #44ff44;
+            color: #008800;
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .confidence {
+            font-size: 14px;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .examples h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .example {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .example:hover {
+            background: #e9ecef;
+        }
+
+        .example-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚫 Spam Detection Tool</h1>
+        
+        <div class="input-section">
+            <label for="messageInput">Enter message to analyze:</label>
+            <textarea id="messageInput" placeholder="Type your message here..."></textarea>
+        </div>
+
+        <div class="btn-container">
+            <button onclick="checkSpam()">Check Message</button>
+        </div>
+
+        <div class="loading" id="loading">Analyzing message...</div>
+        <div class="result" id="result"></div>
+
+        <div class="examples">
+            <h3>Try these examples:</h3>
+            <div class="example" onclick="setExample('Congratulations! You have won $1000! Click here to claim your prize!')">
+                <span class="example-label">Spam Example:</span> Congratulations! You have won $1000! Click here to claim your prize!
+            </div>
+            <div class="example" onclick="setExample('Hi, how are you doing today? Would you like to grab coffee sometime?')">
+                <span class="example-label">Normal Example:</span> Hi, how are you doing today? Would you like to grab coffee sometime?
+            </div>
+            <div class="example" onclick="setExample('URGENT: Your account will be suspended unless you verify your information immediately!')">
+                <span class="example-label">Spam Example:</span> URGENT: Your account will be suspended unless you verify your information immediately!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setExample(text) {
+            document.getElementById('messageInput').value = text;
+        }
+
+        async function checkSpam() {
+            const messageInput = document.getElementById('messageInput');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            const button = document.querySelector('button');
+            
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                showResult('Please enter a message to analyze.', 'error');
+                return;
+            }
+            
+            // Show loading state
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const isSpam = data.is_spam;
+                    const confidence = data.confidence;
+                    
+                    let resultText = `This message is: ${data.message}`;
+                    if (confidence) {
+                        resultText += `<div class="confidence">Confidence: ${(confidence * 100).toFixed(1)}%</div>`;
+                    }
+                    
+                    showResult(resultText, isSpam ? 'spam' : 'not-spam');
+                } else {
+                    showResult(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Network error: ${error.message}`, 'error');
+            } finally {
+                loadingDiv.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+        
+        function showResult(text, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = text;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                checkSpam();
+            }
+        });
+    </script>
+</body>
+</html>
